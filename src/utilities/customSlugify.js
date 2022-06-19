@@ -54,18 +54,25 @@ slugify.extend({
 
 function customSlugify() {
   return {
-    beforeCreate: async (event) => {
+    afterCreate: async (event) => {
       if (event.params.data.title) {
-        event.params.data.slug =
-          event.params.where.id + "-" + slugify(event.params.data.title);
-        // console.log("===========>beforeCreate", event.params);
+        try {
+          const uid = event.model.uid;
+          await strapi.db.query(uid).update({
+            where: { id: event.result.id },
+            data: {
+              slug: event.result.id + "-" + slugify(event.params.data.title),
+            },
+          });
+        } catch (error) {
+          console.log("------->error", error);
+        }
       }
     },
     beforeUpdate: async (event) => {
       if (event.params.data.title) {
         event.params.data.slug =
           event.params.where.id + "-" + slugify(event.params.data.title);
-        // console.log("===========>beforeUpdate", event.params);
       }
     },
   };
